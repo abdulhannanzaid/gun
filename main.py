@@ -433,7 +433,7 @@ class Game:
                     d = dist2(p.x,p.y,o.x,o.y)
                     if d < nd: nd=d; near=o
                 if near and nd < 230:
-                    dx=p.x-near.x; dy=p.y-near.y
+                    dx=near.x-p.x; dy=near.y-p.y
                 else:
                     if random.random()<0.02:
                         p._wx=random.uniform(-1,1); p._wy=random.uniform(-1,1)
@@ -451,7 +451,12 @@ class Game:
                     ball.throw(p, target)
             else:
                 if ball.holder and ball.holder is not p and ball.holder.alive:
-                    dx=ball.holder.x-p.x; dy=ball.holder.y-p.y
+                    if random.random()<0.03:
+                        p._wx=random.uniform(-1,1); p._wy=random.uniform(-1,1)
+                    if random.random()<0.7:
+                        dx=p.x-ball.holder.x; dy=p.y-ball.holder.y
+                    else:
+                        dx,dy=p._wx,p._wy
                 else:
                     if random.random()<0.015:
                         p._wx=random.uniform(-1,1); p._wy=random.uniform(-1,1)
@@ -462,9 +467,11 @@ class Game:
         result = self.ball.update()
         if self.ball.flying:
             if hurdle_hit(self.hurdles, self.ball.x, self.ball.y, BALL_R):
-                culprit = self.ball.target
                 self.ball.flying=False; self.ball.holder=None
-                self._eliminate(culprit,"hit by a ricocheted ball"); return
+                alive = self._alive()
+                if alive:
+                    self.ball.attach(random.choice(alive))
+                return
 
         if result == 'landed':
             tgt = self.ball.holder
@@ -472,8 +479,6 @@ class Game:
                 self._show_msg("YOU have the ball — THROW IT!", 120)
             else:
                 self._show_msg(f"{tgt.name} has the ball!", 50)
-            if hurdle_hit(self.hurdles,tgt.x,tgt.y,PLAYER_R):
-                self._eliminate(tgt,"caught ball inside a wall")
 
         if self.ball.holder and not self.ball.flying:
             h = self.ball.holder
